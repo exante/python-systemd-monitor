@@ -31,7 +31,18 @@ Library functions to monitor state of systemd spawned units
         time.sleep(60)
     ```
 
-2. Get unit properties
+2. Single-thread realtime monitoring
+
+    ```python
+    from systemd_monitor.journald_worker import JournaldWorker
+
+    worker = JournaldWorker()
+
+    for unit, state in worker.run_iterate():
+        print("Update received for unit {}".format(unit))
+    ```
+
+3. Get unit properties
 
     ```python
     from systemd_monitor.systemd_dbus_adapter import SystemdDBusAdapter

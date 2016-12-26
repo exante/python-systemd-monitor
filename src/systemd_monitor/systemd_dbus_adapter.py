@@ -113,7 +113,7 @@ class SystemdDBusAdapter(object):
         # type defined properties
         interface = self.__define_type(unit)
         properties.update(service.GetAll(interface))
-        return systemd_unit_state.SystemdUnit(path, **properties)
+        return systemd_unit.SystemdUnit(path, **properties)
 
     def reload_unit(self, unit, mode='replace'):
         '''
