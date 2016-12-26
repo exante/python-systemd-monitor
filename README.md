@@ -6,7 +6,7 @@ Library functions to monitor state of systemd spawned units
 
 1. Realtime monitoring
 
-    ```
+    ```python
     import time
     from systemd_monitor.journald_worker import JournaldWorker
 
@@ -21,7 +21,10 @@ Library functions to monitor state of systemd spawned units
 
         for unit in states:
             print("Unit {}: state {}, substate {}".format(unit, states[unit].get('ActiveState'), states[unit].get('SubState')))
-        # SystemdUnitState object is actually a dictionary which contains all properties
+            # lets start failed unit
+            if state["unit"].get("ActiveState") == "failed":
+                print("Unit {} started, job ID {}".format(unit, state["unit"].start()))
+        # SystemdUnit object is actually a dictionary which contains all properties
         # comes from DBus, see https://www.freedesktop.org/wiki/Software/systemd/dbus/
         # for available properties names
 
@@ -30,7 +33,7 @@ Library functions to monitor state of systemd spawned units
 
 2. Get unit properties
 
-    ```
+    ```python
     from systemd_monitor.systemd_dbus_adapter import SystemdDBusAdapter
 
     dbus = SystemdDBusAdapter()
@@ -39,4 +42,6 @@ Library functions to monitor state of systemd spawned units
     all_units = dbus.get_all()
     # get specific unit
     unit = dbus.get('foo.service')
+    # reload unit
+    dbus.reload_unit('foo.service')
     ```

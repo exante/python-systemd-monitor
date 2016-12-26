@@ -10,4 +10,4 @@ deb: clean
 
 clean:
 	rm -rf *.deb build dist src/systemd_monitor.egg-info
-	find . -name "*.pyc" -exec rm -rf {} \;
+	find . -name "*.pyc" -delete

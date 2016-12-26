@@ -1,4 +1,4 @@
-#################################################################################
+##########################################################################
 # Copyright (c) 2016 EXANTE                                                     #
 #                                                                               #
 # Permission is hereby granted, free of charge, to any person obtaining a copy  #
@@ -10,7 +10,7 @@
 #                                                                               #
 # The above copyright notice and this permission notice shall be included in    #
 # all copies or substantial portions of the Software.                           #
-#################################################################################
+##########################################################################
 
 import copy
 import datetime

@@ -1,4 +1,4 @@
-#################################################################################
+##########################################################################
 # Copyright (c) 2016 EXANTE                                                     #
 #                                                                               #
 # Permission is hereby granted, free of charge, to any person obtaining a copy  #
@@ -10,28 +10,15 @@
 #                                                                               #
 # The above copyright notice and this permission notice shall be included in    #
 # all copies or substantial portions of the Software.                           #
-#################################################################################
+##########################################################################
 
 
-class SystemdUnitState(object):
-    '''
-    systemd unit helper
-    '''
-
-    __properties = dict()
-
-    def __init__(self, **kwargs):
-        '''
-        :param pid: unit pid
-        '''
-        self.__properties = dict()
-        for name, value in kwargs.items():
-            self.__properties[name] = value
-
-    def get(self, name):
-        '''
-        get property
-        :param name: property name
-        :return: property value if any
-        '''
-        return self.__properties.get(name, '')
+# systemd defined constants
+# interfaces
+MANAGER_INTERFACE = 'org.freedesktop.systemd1.Manager'
+UNIT_INTERFACE = 'org.freedesktop.systemd1.Unit'
+# paths
+SYSTEMD_PATH = '/org/freedesktop/systemd1'
+UNIT_PATH = '/org/freedesktop/systemd1/unit'
+# services
+SYSTEMD_SERVICE = 'org.freedesktop.systemd1'

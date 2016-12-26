@@ -1,4 +1,4 @@
-#################################################################################
+##########################################################################
 # Copyright (c) 2016 EXANTE                                                     #
 #                                                                               #
 # Permission is hereby granted, free of charge, to any person obtaining a copy  #
@@ -10,7 +10,7 @@
 #                                                                               #
 # The above copyright notice and this permission notice shall be included in    #
 # all copies or substantial portions of the Software.                           #
-#################################################################################
+##########################################################################
 
 import copy
 import dbus
@@ -21,22 +21,14 @@ try:
 except ImportError:
     from urllib import quote_plus as EncodeString
 
-import systemd_unit_state
+from systemd_dbus_paths import *
+import systemd_unit
 
 
 class SystemdDBusAdapter(object):
     '''
     systemd dbus adapter
     '''
-
-    # interfaces
-    MANAGER_INTERFACE = 'org.freedesktop.systemd1.Manager'
-    UNIT_INTERFACE = 'org.freedesktop.systemd1.Unit'
-    # paths
-    SYSTEMD_PATH = '/org/freedesktop/systemd1'
-    UNIT_PATH = '/org/freedesktop/systemd1/unit'
-    # services
-    SYSTEMD_SERVICE = 'org.freedesktop.systemd1'
 
     __bus = None
     __logger = None
@@ -47,10 +39,9 @@ class SystemdDBusAdapter(object):
         self.__logger = logging.getLogger('systemd-monitor')
         # init dbus object
         self.__bus = dbus.SystemBus()
-        systemd = self.__bus.get_object(
-            self.SYSTEMD_SERVICE, self.SYSTEMD_PATH)
+        systemd = self.__bus.get_object(SYSTEMD_SERVICE, SYSTEMD_PATH)
         self.__manager = dbus.Interface(
-            systemd, dbus_interface=self.MANAGER_INTERFACE)
+            systemd, dbus_interface=MANAGER_INTERFACE)
 
     def __define_type(self, unit):
         '''
@@ -75,8 +66,8 @@ class SystemdDBusAdapter(object):
             # replace other characters now
             unit = unit.replace('.', '_2e').replace('-', '_2d')
             # and prepend path
-            unit = '{}/{}'.format(self.UNIT_PATH, unit)
-        return self.__bus.get_object(self.SYSTEMD_SERVICE, unit)
+            unit = '{}/{}'.format(UNIT_PATH, unit)
+        return unit, self.__bus.get_object(SYSTEMD_SERVICE, unit)
 
     def __get_properties(self, unit):
         '''
@@ -84,8 +75,8 @@ class SystemdDBusAdapter(object):
         :param unit: unit name
         :return: properties interface
         '''
-        obj = self.__get_object(unit)
-        return dbus.Interface(
+        path, obj = self.__get_object(unit)
+        return path, dbus.Interface(
             obj, dbus_interface='org.freedesktop.DBus.Properties')
 
     def get_all(self):
@@ -114,12 +105,48 @@ class SystemdDBusAdapter(object):
         '''
         get properties
         :param unit: unit name including extension
-        :return: SystemdUnitState object
+        :return: SystemdUnit object
         '''
         # generic properties
-        service = self.__get_properties(unit)
-        properties = service.GetAll(self.UNIT_INTERFACE)
+        path, service = self.__get_properties(unit)
+        properties = service.GetAll(UNIT_INTERFACE)
         # type defined properties
         interface = self.__define_type(unit)
         properties.update(service.GetAll(interface))
-        return systemd_unit_state.SystemdUnitState(**properties)
+        return systemd_unit_state.SystemdUnit(path, **properties)
+
+    def reload_unit(self, unit, mode='replace'):
+        '''
+        reload specific unit
+        :param unit: unit name
+        :param mode: reload mode, default is replace
+        :return:job path if any
+        '''
+        return self.__manager.ReloadUnit(unit, mode)
+
+    def restart_unit(self, unit, mode='replace'):
+        '''
+        restart specific unit
+        :param unit: unit name
+        :param mode: restart mode, default is replace
+        :return:job path if any
+        '''
+        return self.__manager.RestartUnit(unit, mode)
+
+    def start_unit(self, unit, mode='replace'):
+        '''
+        start specific unit
+        :param unit: unit name
+        :param mode: start mode, default is replace
+        :return:job path if any
+        '''
+        return self.__manager.StartUnit(unit, mode)
+
+    def stop_unit(self, unit, mode='replace'):
+        '''
+        stop specific unit
+        :param unit: unit name
+        :param mode: stop mode, default is replace
+        :return:job path if any
+        '''
+        return self.__manager.StopUnit(unit, mode)
