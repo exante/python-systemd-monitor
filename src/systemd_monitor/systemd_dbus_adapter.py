@@ -35,6 +35,8 @@ class SystemdDBusAdapter(object):
     __manager = None
 
     def __init__(self):
+        '''
+        '''
         # main
         self.__logger = logging.getLogger('systemd-monitor')
         # init dbus object
@@ -43,22 +45,11 @@ class SystemdDBusAdapter(object):
         self.__manager = dbus.Interface(
             systemd, dbus_interface=MANAGER_INTERFACE)
 
-    def __define_type(self, unit):
-        '''
-        define type by unit name
-        :param unit: unit name
-        :return: systemd dbus interface name
-        '''
-        extension = unit.split(
-            '.')[-1] if unit.find('.') > -1 else unit.split('_2e')[-1]
-        return 'org.freedesktop.systemd1.{}{}'.format(
-            extension[0].upper(), extension[1:])
-
     def __get_object(self, unit):
         '''
-        get dbus object by name
-        :param unit: unit name
-        :return: dbus object
+        get dbus object by unit name
+        :param unit: unit name including extension, str
+        :return: object path, dbus object
         '''
         if not unit.startswith('/'):
             # initial string encoding
@@ -71,55 +62,63 @@ class SystemdDBusAdapter(object):
 
     def __get_properties(self, unit):
         '''
-        get object properties by name
-        :param unit: unit name
-        :return: properties interface
+        get dbus object properties by unit name
+        :param unit: unit name including extension, str
+        :return: object path, properties interface
         '''
         path, obj = self.__get_object(unit)
         return path, dbus.Interface(
             obj, dbus_interface='org.freedesktop.DBus.Properties')
 
+    def __get_unit_interface(self, unit):
+        '''
+        get unit interface by unit name
+        :param unit: unit name including extension, str
+        :return: systemd dbus interface name
+        '''
+        extension = unit.split(
+            '.')[-1] if unit.find('.') > -1 else unit.split('_2e')[-1]
+        return '{}.{}{}'.format(SYSTEMD_SERVICE, extension[
+                                0].upper(), extension[1:])
+
     def get_units(self):
         '''
-        get all services with states
-        :return: services dictionary
+        get all units with states
+        :return: units dictionary, keys are unit name, value are SystemdUnit
         '''
-        states = dict()
-        units = self.__manager.ListUnits()
-        for unit in units:
-            # from https://www.freedesktop.org/wiki/Software/systemd/dbus/
-            # The primary unit name as string
-            # The human readable description string
-            # The load state (i.e. whether the unit file has been loaded successfully)
-            # The active state (i.e. whether the unit is currently started or not)
-            # The sub state (a more fine-grained version of the active state that is specific to the unit type, which the active state is not)
-            # A unit that is being followed in its state by this unit, if there is any, otherwise the empty string.
-            # The unit object path
-            # If there is a job queued for the job unit the numeric job id, 0 otherwise
-            # The job type as string
-            # The job object path
-            states[unit[0]] = self.get_unit(unit[6])
-        return states
+        # from https://www.freedesktop.org/wiki/Software/systemd/dbus/
+        # The primary unit name as string
+        # The human readable description string
+        # The load state (i.e. whether the unit file has been loaded successfully)
+        # The active state (i.e. whether the unit is currently started or not)
+        # The sub state (a more fine-grained version of the active state that is specific to the unit type, which the active state is not)
+        # A unit that is being followed in its state by this unit, if there is any, otherwise the empty string.
+        # The unit object path
+        # If there is a job queued for the job unit the numeric job id, 0 otherwise
+        # The job type as string
+        # The job object path
+        return dict((unit[0], self.get_unit(unit[6]))
+                    for unit in self.__manager.ListUnits())
 
     def get_unit(self, unit):
         '''
-        get properties
-        :param unit: unit name including extension
+        get properties by unit
+        :param unit: unit name including extension, str
         :return: SystemdUnit object
         '''
         # generic properties
         path, service = self.__get_properties(unit)
         properties = service.GetAll(UNIT_INTERFACE)
         # type defined properties
-        interface = self.__define_type(unit)
+        interface = self.__get_unit_interface(unit)
         properties.update(service.GetAll(interface))
         return systemd_unit.SystemdUnit(path, **properties)
 
     def reload_unit(self, unit, mode='replace'):
         '''
         reload specific unit
-        :param unit: unit name
-        :param mode: reload mode, default is replace
+        :param unit: unit name including extension, str
+        :param mode: reload mode, str, default is replace
         :return:job path if any
         '''
         return self.__manager.ReloadUnit(unit, mode)
@@ -127,8 +126,8 @@ class SystemdDBusAdapter(object):
     def restart_unit(self, unit, mode='replace'):
         '''
         restart specific unit
-        :param unit: unit name
-        :param mode: restart mode, default is replace
+        :param unit: unit name including extension, str
+        :param mode: restart mode, str, default is replace
         :return:job path if any
         '''
         return self.__manager.RestartUnit(unit, mode)
@@ -136,8 +135,8 @@ class SystemdDBusAdapter(object):
     def start_unit(self, unit, mode='replace'):
         '''
         start specific unit
-        :param unit: unit name
-        :param mode: start mode, default is replace
+        :param unit: unit name including extension, str
+        :param mode: start mode, str, default is replace
         :return:job path if any
         '''
         return self.__manager.StartUnit(unit, mode)
@@ -145,8 +144,37 @@ class SystemdDBusAdapter(object):
     def stop_unit(self, unit, mode='replace'):
         '''
         stop specific unit
-        :param unit: unit name
-        :param mode: stop mode, default is replace
+        :param unit: unit name including extension, str
+        :param mode: stop mode, str, default is replace
         :return:job path if any
         '''
         return self.__manager.StopUnit(unit, mode)
+
+    def __eq__(self, other):
+        '''
+        comparison method
+        :param other: other SystemdDBusAdapter instance
+        :return: True if instances equal
+        '''
+        return self.__repr__() == other.__repr__()
+
+    def __hash__(self):
+        '''
+        make class hashable
+        :return: hash of self.__repr__()
+        '''
+        return hash(self.__repr__())
+
+    def __repr__(self):
+        '''
+        representation method
+        :return: string representation of instance
+        '''
+        return 'SystemdDBusAdapter()'
+
+    def __str__(self):
+        '''
+        string conversion method
+        :return: string representation of instance
+        '''
+        return 'SystemdDBusAdapter()'

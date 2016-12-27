@@ -38,6 +38,8 @@ class JournaldWorker(threading.Thread):
     __systemd = None
 
     def __init__(self):
+        '''
+        '''
         # thread properties
         threading.Thread.__init__(self)
         self.__lock = threading.Lock()
@@ -57,7 +59,7 @@ class JournaldWorker(threading.Thread):
     @property
     def states(self):
         '''
-        :return: current states
+        :return: dictionary of current states, keys are unit names, values are SystemdUnit
         '''
         with self.__lock:
             return copy.deepcopy(self.__states)
@@ -148,3 +150,32 @@ class JournaldWorker(threading.Thread):
         '''
         with self.__lock:
             self.__should_run = False
+
+    def __eq__(self, other):
+        '''
+        comparison method
+        :param other: other JournaldWorker instance
+        :return: True if instances equal
+        '''
+        return self.__repr__() == other.__repr__()
+
+    def __hash__(self):
+        '''
+        make class hashable
+        :return: hash of self.__repr__()
+        '''
+        return hash(self.__repr__())
+
+    def __repr__(self):
+        '''
+        representation method
+        :return: string representation of instance
+        '''
+        return 'JournaldWorker()'
+
+    def __str__(self):
+        '''
+        string conversion method
+        :return: string representation of instance
+        '''
+        return 'JournaldWorker()'

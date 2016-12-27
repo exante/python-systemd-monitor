@@ -29,7 +29,8 @@ class SystemdUnit(object):
 
     def __init__(self, obj_path, **kwargs):
         '''
-        :param pid: unit pid
+        :param obj_path: path to dbus object, str
+        :param kwargs: dictionary of properties from dbus
         '''
         self.__obj_path = obj_path
         self.__properties = dict()
@@ -51,14 +52,14 @@ class SystemdUnit(object):
         '''
         get property
         :param name: property name
-        :return: property value if any
+        :return: property value if any, otherwise return empty string
         '''
         return self.__properties.get(name, '')
 
     def reload(self, mode='replace'):
         '''
         reload unit
-        :param mode: reload mode, default is replace
+        :param mode: reload mode, str, default is replace
         :return: job path if any
         '''
         return self.__dbus_interface.Reload(mode)
@@ -66,7 +67,7 @@ class SystemdUnit(object):
     def restart(self, mode='replace'):
         '''
         restart unit
-        :param mode: restart mode, default is replace
+        :param mode: restart mode, str, default is replace
         :return: job path if any
         '''
         return self.__dbus_interface.Restart(mode)
@@ -74,7 +75,7 @@ class SystemdUnit(object):
     def start(self, mode='replace'):
         '''
         start unit
-        :param mode: start mode, default is replace
+        :param mode: start mode, str, default is replace
         :return: job path if any
         '''
         return self.__dbus_interface.Start(mode)
@@ -82,7 +83,36 @@ class SystemdUnit(object):
     def stop(self, mode='replace'):
         '''
         stop unit
-        :param mode: stop mode, default is replace
+        :param mode: stop mode, str, default is replace
         :return: job path if any
         '''
         return self.__dbus_interface.Stop(mode)
+
+    def __eq__(self, other):
+        '''
+        comparison method
+        :param other: other SystemdUnit instance
+        :return: True if instances equal
+        '''
+        return self.__repr__() == other.__repr__()
+
+    def __hash__(self):
+        '''
+        make class hashable
+        :return: hash of self.__repr__()
+        '''
+        return hash(self.__repr__())
+
+    def __repr__(self):
+        '''
+        representation method
+        :return: string representation of instance
+        '''
+        return 'SystemdUnit({}, properties: {})'.format(self.__obj_path, sorted(self.__properties, key=lambda k: k))
+
+    def __str__(self):
+        '''
+        string conversion method
+        :return: string representation of instance
+        '''
+        return 'SystemdUnit({})'.format(self.__obj_path)
