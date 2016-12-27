@@ -81,7 +81,7 @@ class JournaldWorker(threading.Thread):
         initial services load
         '''
         with self.__lock:
-            self.__states = self.__systemd.get_all()
+            self.__states = self.__systemd.get_units()
 
     def run(self):
         '''
@@ -105,8 +105,7 @@ class JournaldWorker(threading.Thread):
                     # update internal storage
                     with self.__lock:
                         self.__states[
-                            data['UNIT']] = self.__systemd.get(
-                            data['UNIT'])
+                            data['UNIT']] = self.__systemd.get_unit(data['UNIT'])
                         self.__lst = datetime.datetime.utcnow()
             except Exception:
                 self.__logger.warning('Exception recieved', exc_info=True)
@@ -135,8 +134,7 @@ class JournaldWorker(threading.Thread):
                     # update internal storage
                     with self.__lock:
                         self.__states[
-                            data['UNIT']] = self.__systemd.get(
-                            data['UNIT'])
+                            data['UNIT']] = self.__systemd.get_unit(data['UNIT'])
                         self.__lst = datetime.datetime.utcnow()
                         yield data['UNIT'], self.__states[data['UNIT']]
             except Exception:

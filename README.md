@@ -50,9 +50,9 @@ Library functions to monitor state of systemd spawned units
     dbus = SystemdDBusAdapter()
 
     # get all units
-    all_units = dbus.get_all()
+    all_units = dbus.get_units()
     # get specific unit
-    unit = dbus.get('foo.service')
+    unit = dbus.get_unit('foo.service')
     # reload unit
     dbus.reload_unit('foo.service')
     ```

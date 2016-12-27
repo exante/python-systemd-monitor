@@ -79,7 +79,7 @@ class SystemdDBusAdapter(object):
         return path, dbus.Interface(
             obj, dbus_interface='org.freedesktop.DBus.Properties')
 
-    def get_all(self):
+    def get_units(self):
         '''
         get all services with states
         :return: services dictionary
@@ -98,10 +98,10 @@ class SystemdDBusAdapter(object):
             # If there is a job queued for the job unit the numeric job id, 0 otherwise
             # The job type as string
             # The job object path
-            states[unit[0]] = self.get(unit[6])
+            states[unit[0]] = self.get_unit(unit[6])
         return states
 
-    def get(self, unit):
+    def get_unit(self, unit):
         '''
         get properties
         :param unit: unit name including extension
