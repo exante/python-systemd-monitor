@@ -4,6 +4,7 @@ all: deb
 
 deb: clean
 	fpm -s python -t deb \
+		--iteration $(BUILD_NUMBER) \
 		-d python-dbus \
 		-d systemd \
 		setup.py
