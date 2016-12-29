@@ -1,4 +1,4 @@
-#################################################################################
+##########################################################################
 # Copyright (c) 2016 EXANTE                                                     #
 #                                                                               #
 # Permission is hereby granted, free of charge, to any person obtaining a copy  #
@@ -10,7 +10,7 @@
 #                                                                               #
 # The above copyright notice and this permission notice shall be included in    #
 # all copies or substantial portions of the Software.                           #
-#################################################################################
+##########################################################################
 
 import copy
 import datetime
@@ -38,6 +38,8 @@ class JournaldWorker(threading.Thread):
     __systemd = None
 
     def __init__(self):
+        '''
+        '''
         # thread properties
         threading.Thread.__init__(self)
         self.__lock = threading.Lock()
@@ -57,7 +59,7 @@ class JournaldWorker(threading.Thread):
     @property
     def states(self):
         '''
-        :return: current states
+        :return: dictionary of current states, keys are unit names, values are SystemdUnit
         '''
         with self.__lock:
             return copy.deepcopy(self.__states)
@@ -74,13 +76,14 @@ class JournaldWorker(threading.Thread):
         get journal stdout
         '''
         process = subprocess.Popen(self.__cmdline, stdout=subprocess.PIPE)
-        return iter(process.stdout.readline, '')
+        return process.stdout
 
     def __load_states(self):
         '''
         initial services load
         '''
-        self.__states = self.__systemd.get_all()
+        with self.__lock:
+            self.__states = self.__systemd.get_units()
 
     def run(self):
         '''
@@ -104,9 +107,38 @@ class JournaldWorker(threading.Thread):
                     # update internal storage
                     with self.__lock:
                         self.__states[
-                            data['UNIT']] = self.__systemd.get(
-                            data['UNIT'])
+                            data['UNIT']] = self.__systemd.get_unit(data['UNIT'])
                         self.__lst = datetime.datetime.utcnow()
+            except Exception:
+                self.__logger.warning('Exception recieved', exc_info=True)
+                self.__status = False
+            time.sleep(60)
+
+    def run_iterate(self):
+        '''
+        run thread and return states right in time
+        '''
+        self.__load_states()
+        while self.__should_run:
+            try:
+                for line in self.__get_journal():
+                    self.__status = True
+                    # exit on no actions
+                    if not self.__should_run:
+                        break
+                    # parse line
+                    if isinstance(line, bytes):
+                        line = line.decode('utf8')
+                    data = json.loads(line)
+                    # check if it is unit related infomation
+                    if 'UNIT' not in data:
+                        continue
+                    # update internal storage
+                    with self.__lock:
+                        self.__states[
+                            data['UNIT']] = self.__systemd.get_unit(data['UNIT'])
+                        self.__lst = datetime.datetime.utcnow()
+                        yield data['UNIT'], self.__states[data['UNIT']]
             except Exception:
                 self.__logger.warning('Exception recieved', exc_info=True)
                 self.__status = False
@@ -118,3 +150,32 @@ class JournaldWorker(threading.Thread):
         '''
         with self.__lock:
             self.__should_run = False
+
+    def __eq__(self, other):
+        '''
+        comparison method
+        :param other: other JournaldWorker instance
+        :return: True if instances equal
+        '''
+        return self.__repr__() == other.__repr__()
+
+    def __hash__(self):
+        '''
+        make class hashable
+        :return: hash of self.__repr__()
+        '''
+        return hash(self.__repr__())
+
+    def __repr__(self):
+        '''
+        representation method
+        :return: string representation of instance
+        '''
+        return 'JournaldWorker()'
+
+    def __str__(self):
+        '''
+        string conversion method
+        :return: string representation of instance
+        '''
+        return 'JournaldWorker()'
