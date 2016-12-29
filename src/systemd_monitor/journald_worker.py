@@ -76,7 +76,7 @@ class JournaldWorker(threading.Thread):
         get journal stdout
         '''
         process = subprocess.Popen(self.__cmdline, stdout=subprocess.PIPE)
-        return iter(process.stdout.readline, '')
+        return process.stdout
 
     def __load_states(self):
         '''
