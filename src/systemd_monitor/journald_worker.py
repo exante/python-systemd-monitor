@@ -54,7 +54,7 @@ class JournaldWorker(threading.Thread):
         :return: last journal update time
         '''
         with self.__lock:
-            return copy.deepcopy(self.__lst)
+            return copy.copy(self.__lst)
 
     @property
     def states(self):
@@ -62,7 +62,7 @@ class JournaldWorker(threading.Thread):
         :return: dictionary of current states, keys are unit names, values are SystemdUnit
         '''
         with self.__lock:
-            return copy.deepcopy(self.__states)
+            return copy.copy(self.__states)
 
     @property
     def status(self):
