@@ -14,6 +14,7 @@
 
 import copy
 import datetime
+import dbus
 import json
 import logging
 import subprocess
@@ -112,11 +113,15 @@ class JournaldWorker(threading.Thread):
                     if 'UNIT' not in data:
                         continue
                     # update internal storage
+                    try:
+                        unit_data = self.__systemd.get_unit(data['UNIT'])
+                    except dbus.DBusException:
+                        self.__logger.warning('DBus exception recieved', exc_info=True)
+                        continue
                     with self.__lock:
-                        self.__states[
-                            data['UNIT']] = self.__systemd.get_unit(data['UNIT'])
+                        self.__states[data['UNIT']] = unit_data
                         self.__lst = datetime.datetime.utcnow()
-                        yield data['UNIT'], self.__states[data['UNIT']]
+                        yield data['UNIT'], unit_data
             except Exception:
                 self.__logger.warning('Exception recieved', exc_info=True)
                 self.__status = False
