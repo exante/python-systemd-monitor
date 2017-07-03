@@ -14,6 +14,7 @@
 
 import copy
 import datetime
+import dbus
 import json
 import logging
 import subprocess
@@ -89,30 +90,8 @@ class JournaldWorker(threading.Thread):
         '''
         run thread
         '''
-        self.__load_states()
-        while self.__should_run:
-            try:
-                for line in self.__get_journal():
-                    self.__status = True
-                    # exit on no actions
-                    if not self.__should_run:
-                        break
-                    # parse line
-                    if isinstance(line, bytes):
-                        line = line.decode('utf8')
-                    data = json.loads(line)
-                    # check if it is unit related infomation
-                    if 'UNIT' not in data:
-                        continue
-                    # update internal storage
-                    with self.__lock:
-                        self.__states[
-                            data['UNIT']] = self.__systemd.get_unit(data['UNIT'])
-                        self.__lst = datetime.datetime.utcnow()
-            except Exception:
-                self.__logger.warning('Exception recieved', exc_info=True)
-                self.__status = False
-            time.sleep(60)
+        for unit, state in self.run_iterate():
+            pass
 
     def run_iterate(self):
         '''
@@ -134,11 +113,15 @@ class JournaldWorker(threading.Thread):
                     if 'UNIT' not in data:
                         continue
                     # update internal storage
+                    try:
+                        unit_data = self.__systemd.get_unit(data['UNIT'])
+                    except dbus.DBusException:
+                        self.__logger.warning('DBus exception recieved', exc_info=True)
+                        continue
                     with self.__lock:
-                        self.__states[
-                            data['UNIT']] = self.__systemd.get_unit(data['UNIT'])
+                        self.__states[data['UNIT']] = unit_data
                         self.__lst = datetime.datetime.utcnow()
-                        yield data['UNIT'], self.__states[data['UNIT']]
+                        yield data['UNIT'], unit_data
             except Exception:
                 self.__logger.warning('Exception recieved', exc_info=True)
                 self.__status = False
