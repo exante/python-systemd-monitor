@@ -24,6 +24,7 @@ class SystemdUnit(object):
     '''
 
     __dbus_interface = None
+    __dbus_object = None
     __obj_path = ''
     __properties = dict()
 
@@ -44,9 +45,10 @@ class SystemdUnit(object):
         init dbus interface
         '''
         system_bus = dbus.SystemBus()
-        dbus_obj = system_bus.get_object(SYSTEMD_SERVICE, self.__obj_path)
+        self.__dbus_obj = system_bus.get_object(
+            SYSTEMD_SERVICE, self.__obj_path)
         self.__dbus_interface = dbus.Interface(
-            dbus_obj, dbus_interface=UNIT_INTERFACE)
+            self.__dbus_obj, dbus_interface=UNIT_INTERFACE)
 
     def get(self, name):
         '''
@@ -55,6 +57,17 @@ class SystemdUnit(object):
         :return: property value if any, otherwise return empty string
         '''
         return self.__properties.get(name, '')
+
+    def get_and_update(self, name):
+        '''
+        get property from dbus and assing in internal storage
+        :param name: property name
+        :return: property value
+        '''
+        prop_interface = dbus.Interface(
+            self.__dbus_obj, dbus_interface='org.freedesktop.DBus.Properties')
+        self.__properties[name] = prop_interface.Get(UNIT_INTERFACE, name)
+        return self.__properties[name]
 
     def reload(self, mode='replace'):
         '''
