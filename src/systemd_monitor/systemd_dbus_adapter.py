@@ -98,7 +98,9 @@ class SystemdDBusAdapter(object):
         # The job type as string
         # The job object path
         return dict((unit[0], self.get_unit(unit[6]))
-                    for unit in self.__manager.ListUnits())
+                    for unit in self.__manager.ListUnits()
+                    # dunno actually wtf, but okay
+                    if not unit[6] in ('org.freedesktop.systemd1.Busname'))
 
     def get_unit(self, unit):
         '''
