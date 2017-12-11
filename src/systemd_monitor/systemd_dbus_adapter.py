@@ -98,9 +98,7 @@ class SystemdDBusAdapter(object):
         # The job type as string
         # The job object path
         return dict((unit[0], self.get_unit(unit[6]))
-                    for unit in self.__manager.ListUnits()
-                    # dunno actually wtf, but okay
-                    if not unit[6] in ('org.freedesktop.systemd1.Busname'))
+                    for unit in self.__manager.ListUnits())
 
     def get_unit(self, unit):
         '''
@@ -113,7 +111,10 @@ class SystemdDBusAdapter(object):
         properties = service.GetAll(UNIT_INTERFACE)
         # type defined properties
         interface = self.__get_unit_interface(unit)
-        properties.update(service.GetAll(interface))
+        try:
+            properties.update(service.GetAll(interface))
+        except:
+            pass
         return systemd_unit.SystemdUnit(path, **properties)
 
     def reload_unit(self, unit, mode='replace'):
