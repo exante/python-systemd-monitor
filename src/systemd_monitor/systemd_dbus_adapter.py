@@ -100,6 +100,15 @@ class SystemdDBusAdapter(object):
         return dict((unit[0], self.get_unit(unit[6]))
                     for unit in self.__manager.ListUnits())
 
+    def get_units_states(self):
+        '''
+        get all units with states
+        :remark: simplified version of get_units
+        :return: units dictionary, keys are unit name, value are states
+        '''
+        return dict((unit[0], {'ActiveState': unit[3], 'SubState': unit[4]})
+                    for unit in self.__manager.ListUnits())
+
     def get_unit(self, unit):
         '''
         get properties by unit
