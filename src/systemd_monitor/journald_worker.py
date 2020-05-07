@@ -21,7 +21,7 @@ import subprocess
 import threading
 import time
 
-import systemd_dbus_adapter
+from systemd_monitor import systemd_dbus_adapter
 
 
 class JournaldWorker(threading.Thread):

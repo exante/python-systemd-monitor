@@ -21,8 +21,8 @@ try:
 except ImportError:
     from urllib import quote_plus as EncodeString
 
-from systemd_dbus_paths import *
-import systemd_unit
+from systemd_monitor.systemd_dbus_paths import *
+from systemd_monitor import systemd_unit
 
 
 class SystemdDBusAdapter(object):

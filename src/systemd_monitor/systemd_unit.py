@@ -15,7 +15,7 @@
 
 import dbus
 
-from systemd_dbus_paths import *
+from systemd_monitor.systemd_dbus_paths import *
 
 
 class SystemdUnit(object):

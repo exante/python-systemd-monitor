@@ -33,6 +33,6 @@ setup(
     zip_safe=False,
 
     install_requires=[
-#        'dbus-python'
+        'dbus-python>=1.2.0'
     ]
 )
